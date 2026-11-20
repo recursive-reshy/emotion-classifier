@@ -1,7 +1,7 @@
 [project]
 name = "emotion-classifier"
 version = "0.1.0"
-description = "Add your description here"
+description = "Emotion classification on tweets: classical BoW/TF-IDF vs fine-tuned transformers vs zero-shot, on dair-ai/emotion."
 readme = "README.md"
 authors = [
     { name = "naresh", email = "reshs92.09@gmail.com" }
@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
-emotion-classifier = "emotion_classifier:main"
+emotion = "emotion_classifier.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.12.13,<0.13.0"]
