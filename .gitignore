@@ -1,0 +1,17 @@
+# Local-only planning / agent files
+docs/
+CLAUDE.md
+.claude/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Training artefacts and caches
+outputs/
+.cache/
