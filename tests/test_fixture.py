@@ -1,7 +1,7 @@
 from emotion_classifier.data import LABELS, DatasetSplits
 
 def test_labels_have_dataset_emotions_in_order():
-    assert LABELS == [ "saddness", "joy", "love", "anger", "fear", "surprise" ]
+    assert LABELS == [ "sadness", "joy", "love", "anger", "fear", "surprise" ]
 
 def test_fixture_is_a_dataset_splits( tiny_splits ):
     assert isinstance( tiny_splits, DatasetSplits )

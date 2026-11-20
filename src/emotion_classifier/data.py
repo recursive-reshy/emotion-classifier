@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 DATASET_NAME = "dair-ai/emotion"
 DATASET_CONFIG = "split"
 
-LABELS: list[ str ] = [ "saddness", "joy", "love", "anger", "fear", "surprise" ]
+LABELS: list[ str ] = [ "sadness", "joy", "love", "anger", "fear", "surprise" ]
 
 @dataclass( frozen = True )
 class DatasetSplits:
