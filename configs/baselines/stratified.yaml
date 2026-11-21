@@ -1,0 +1,4 @@
+experiment: E0
+family: baseline
+strategy: stratified
+seed: 42

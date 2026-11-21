@@ -1,0 +1,4 @@
+experiment: E0
+family: baseline
+strategy: most_frequent
+seed: 42
