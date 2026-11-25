@@ -1,0 +1,11 @@
+experiment: E3
+family: transformer
+model_name: distilbert-base-uncased
+max_length: 88        # from EDA: longest train tweet = 87 (DistilBERT) / 88 (RoBERTa) tokens
+lr: 5.0e-5
+epochs: 4
+batch_size: 32
+weight_decay: 0.01
+warmup_ratio: 0.1
+early_stopping_patience: 2
+seeds: [ 13, 42, 7 ]

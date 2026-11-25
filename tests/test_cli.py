@@ -3,6 +3,7 @@ from typer.testing import CliRunner
 
 from emotion_classifier.cli import app
 from emotion_classifier.results import load_results
+from emotion_classifier.transformer import FineTuneOutput
 
 runner = CliRunner()
 
@@ -96,13 +97,41 @@ def test_grid_on_folder_without_configs_fails( tmp_path ):
     ( tmp_path / "empty" ).mkdir()
     assert _invoke( "grid", tmp_path / "empty", "--results-dir", tmp_path / "r" ).exit_code != 0
 
-def test_run_transformer_config_is_not_implemented_yet( fake_data, tmp_path ):
-    config = tmp_path / "distilbert.yaml"
-    config.write_text( TRANSFORMER_YAML )
+ZEROSHOT_YAML = """
+experiment: E4
+family: zeroshot
+model_name: facebook/bart-large-mnli
+hypothesis_template: "This text expresses {}."
+batch_size: 16
+seed: 42
+"""
+
+def test_run_zeroshot_config_is_not_implemented_yet( fake_data, tmp_path ):
+    config = tmp_path / "bart_mnli.yaml"
+    config.write_text( ZEROSHOT_YAML )
     result = _invoke( "run", config, "--results-dir", tmp_path / "results" )
     assert result.exit_code != 0
     assert "not implemented" in result.output
     assert load_results( tmp_path / "results" ) == []
+
+def test_run_transformer_loops_over_seeds( fake_data, tmp_path, monkeypatch ):
+    def fake_fine_tune( splits, cfg, seed, output_dir ):
+        return FineTuneOutput(
+            model = None, tokenizer = None, val_pred = list( splits.val_labels ), test_pred = list( splits.test_labels ),
+            train_seconds = 1.0, val_infer_seconds_per_1k = 1.0, test_infer_seconds_per_1k = 1.0,
+            n_params = 10, device = "cpu",
+        )
+    monkeypatch.setattr( "emotion_classifier.transformer.fine_tune", fake_fine_tune )
+    config = tmp_path / "distilbert.yaml"
+    config.write_text( TRANSFORMER_YAML )
+
+    result = _invoke( "run", config, "--results-dir", tmp_path / "results", "--output-dir", tmp_path / "outputs" )
+
+    assert result.exit_code == 0, result.output
+    results = load_results( tmp_path / "results" )
+    assert len( results ) == 6
+    assert sorted( { r.seed for r in results } ) == [ 7, 13, 42 ]
+    assert all( r.model == "distilbert" for r in results )
 
 def test_run_invalid_config_fails_with_a_clear_message( fake_data, tmp_path ):
     config = tmp_path / "bad.yaml"

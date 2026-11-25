@@ -7,7 +7,8 @@ from typing import Annotated
 import typer
 
 from emotion_classifier.classical import run_experiment
-from emotion_classifier.config import BaselineConfig, ClassicalConfig, ConfigError, load_config
+from emotion_classifier import transformer
+from emotion_classifier.config import BaselineConfig, ClassicalConfig, ConfigError, TransformerConfig, load_config
 from emotion_classifier.data import load_emotion
 
 app = typer.Typer(
@@ -34,25 +35,37 @@ def _git_sha() -> str | None:
         return None
     return completed.stdout.strip() or None
 
-def _run_config( config_path: Path, split: Split, results_dir: Path ) -> None:
+def _run_config( config_path: Path, split: Split, results_dir: Path, output_dir: Path ) -> None:
     try:
         cfg = load_config( config_path )
     except ConfigError as error:
         typer.echo( f"Invalid config: {error}", err = True )
         raise typer.Exit( code = 1 )
 
-    if not isinstance( cfg, ( ClassicalConfig, BaselineConfig ) ):
+    if isinstance( cfg, TransformerConfig ):
+        results = transformer.run_transformer_experiment(
+            cfg,
+            load_emotion(),
+            config_path.stem,
+            results_dir,
+            output_dir,
+            _timestamp(),
+            git_sha = _git_sha(),
+            splits_to_save = split.value,
+        )
+    elif isinstance( cfg, ( ClassicalConfig, BaselineConfig ) ):
+        results = run_experiment(
+            cfg,
+            load_emotion( seed = cfg.seed ),
+            config_path.stem,
+            results_dir,
+            _timestamp(),
+            git_sha = _git_sha(),
+            splits_to_save = split.value,
+        )
+    else:
         _not_implemented( f"family '{cfg.family}'" )
 
-    results = run_experiment(
-        cfg,
-        load_emotion( seed = cfg.seed ),
-        config_path.stem,
-        results_dir,
-        _timestamp(),
-        git_sha = _git_sha(),
-        splits_to_save = split.value,
-    )
     for result in results:
         typer.echo( f"{result.run_id}: macro_f1 = {result.metrics[ 'macro_f1' ]:.4f}" )
 
@@ -64,7 +77,7 @@ def run(
     results_dir: Annotated[ Path, typer.Option( help = "Where RunResult JSON and predictions go." ) ] = Path( "results" ),
 ) -> None:
     """Run one experiment from a config file"""
-    _run_config( config, split, results_dir )
+    _run_config( config, split, results_dir, output_dir )
 
 @app.command()
 def grid(
@@ -80,7 +93,7 @@ def grid(
 
     for config_path in configs:
         typer.echo( f"== {config_path.name}" )
-        _run_config( config_path, Split.both, results_dir )
+        _run_config( config_path, Split.both, results_dir, output_dir )
 
 @app.command()
 def report() -> None:
