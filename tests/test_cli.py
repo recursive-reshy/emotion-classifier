@@ -106,13 +106,19 @@ batch_size: 16
 seed: 42
 """
 
-def test_run_zeroshot_config_is_not_implemented_yet( fake_data, tmp_path ):
+def test_run_zeroshot_writes_a_test_result_only( fake_data, tmp_path, monkeypatch ):
+    monkeypatch.setattr(
+        "emotion_classifier.zeroshot.predict_zeroshot",
+        lambda texts, cfg, classifier = None, device = "cpu": ( [ 1 ] * len( texts ), 1.0 ),
+    )
     config = tmp_path / "bart_mnli.yaml"
     config.write_text( ZEROSHOT_YAML )
+
     result = _invoke( "run", config, "--results-dir", tmp_path / "results" )
-    assert result.exit_code != 0
-    assert "not implemented" in result.output
-    assert load_results( tmp_path / "results" ) == []
+
+    assert result.exit_code == 0, result.output
+    results = load_results( tmp_path / "results" )
+    assert [ ( r.experiment, r.model, r.split ) for r in results ] == [ ( "E4", "bart_mnli", "test" ) ]
 
 def test_run_transformer_loops_over_seeds( fake_data, tmp_path, monkeypatch ):
     def fake_fine_tune( splits, cfg, seed, output_dir ):

@@ -1,0 +1,6 @@
+experiment: E4
+family: zeroshot
+model_name: facebook/bart-large-mnli
+hypothesis_template: "This text expresses {}."
+batch_size: 16
+seed: 42

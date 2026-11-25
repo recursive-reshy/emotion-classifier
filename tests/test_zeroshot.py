@@ -2,7 +2,8 @@ import pytest
 
 from emotion_classifier.config import ZeroShotConfig
 from emotion_classifier.data import LABELS
-from emotion_classifier.zeroshot import labels_to_ids, predict_zeroshot, top_label_ids
+from emotion_classifier.results import load_results
+from emotion_classifier.zeroshot import labels_to_ids, predict_zeroshot, run_zeroshot_experiment, top_label_ids
 
 def make_cfg( **overrides ) -> ZeroShotConfig:
     values = dict(
@@ -67,3 +68,46 @@ def test_predict_zeroshot_handles_empty_input():
     predictions, per_1k = predict_zeroshot( [], make_cfg(), classifier = FakePipeline( [] ) )
     assert predictions == []
     assert per_1k == 0.0
+
+def run_fake( tiny_splits, tmp_path, tops = None, **kwargs ):
+    tops = tops if tops is not None else [ "sadness" ] * len( tiny_splits.test_labels )
+    return run_zeroshot_experiment(
+        make_cfg(), tiny_splits, "bart_mnli", tmp_path / "results", "20261125T130000",
+        git_sha = "abc123", classifier = FakePipeline( tops ), device = "cpu", **kwargs,
+    )
+
+def test_experiment_evaluates_on_test_only( tiny_splits, tmp_path ):
+    results = run_fake( tiny_splits, tmp_path )
+    assert [ r.split for r in results ] == [ "test" ]
+    assert [ r.split for r in load_results( tmp_path / "results" ) ] == [ "test" ]
+    assert len( list( ( tmp_path / "results" / "preds" ).glob( "*.csv" ) ) ) == 1
+
+def test_experiment_records_metrics_timing_and_provenance( tiny_splits, tmp_path ):
+    tops = [ LABELS[ label ] for label in tiny_splits.test_labels ]  # a perfect zero-shot model
+    ( result, ) = run_fake( tiny_splits, tmp_path, tops = tops )
+
+    assert result.metrics[ "macro_f1" ] == 1.0
+    assert result.experiment == "E4"
+    assert result.model == "bart_mnli"
+    assert result.run_id.startswith( "E4-bart_mnli-test-42-" )
+    assert result.train_seconds is None  # nothing is trained
+    assert result.infer_seconds_per_1k >= 0.0
+    assert result.n_params is None  # the fake pipeline has no model to count
+    assert result.device == "cpu"
+    assert result.git_sha == "abc123"
+    assert result.config[ "hypothesis_template" ] == "This text expresses {}."
+
+def test_experiment_counts_params_when_the_pipeline_has_a_model( tiny_splits, tmp_path ):
+    import torch
+
+    classifier = FakePipeline( [ "joy" ] * len( tiny_splits.test_labels ) )
+    classifier.model = torch.nn.Linear( 3, 2 )  # 8 parameters
+    ( result, ) = run_zeroshot_experiment(
+        make_cfg(), tiny_splits, "bart_mnli", tmp_path / "results", "20261125T130000", classifier = classifier, device = "cpu",
+    )
+    assert result.n_params == 8
+
+def test_experiment_never_overwrites( tiny_splits, tmp_path ):
+    run_fake( tiny_splits, tmp_path )
+    with pytest.raises( FileExistsError ):
+        run_fake( tiny_splits, tmp_path )

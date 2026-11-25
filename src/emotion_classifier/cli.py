@@ -7,8 +7,8 @@ from typing import Annotated
 import typer
 
 from emotion_classifier.classical import run_experiment
-from emotion_classifier import transformer
-from emotion_classifier.config import BaselineConfig, ClassicalConfig, ConfigError, TransformerConfig, load_config
+from emotion_classifier import transformer, zeroshot
+from emotion_classifier.config import BaselineConfig, ClassicalConfig, ConfigError, TransformerConfig, ZeroShotConfig, load_config
 from emotion_classifier.data import load_emotion
 
 app = typer.Typer(
@@ -52,6 +52,15 @@ def _run_config( config_path: Path, split: Split, results_dir: Path, output_dir:
             _timestamp(),
             git_sha = _git_sha(),
             splits_to_save = split.value,
+        )
+    elif isinstance( cfg, ZeroShotConfig ):
+        results = zeroshot.run_zeroshot_experiment(  # always test only: no tuning (TRD §4.5), so --split is ignored
+            cfg,
+            load_emotion(),
+            config_path.stem,
+            results_dir,
+            _timestamp(),
+            git_sha = _git_sha(),
         )
     elif isinstance( cfg, ( ClassicalConfig, BaselineConfig ) ):
         results = run_experiment(
