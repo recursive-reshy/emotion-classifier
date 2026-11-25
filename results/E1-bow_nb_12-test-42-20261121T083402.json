@@ -1,0 +1,144 @@
+{
+  "run_id": "E1-bow_nb_12-test-42-20261121T083402",
+  "experiment": "E1",
+  "model": "bow_nb_12",
+  "config": {
+    "experiment": "E1",
+    "family": "classical",
+    "vectorizer": {
+      "kind": "bow",
+      "ngram_range": [
+        1,
+        2
+      ],
+      "min_df": 2,
+      "max_features": null,
+      "stop_words": null
+    },
+    "classifier": {
+      "kind": "nb",
+      "class_weight": null
+    },
+    "tuning": {
+      "param": "alpha",
+      "values": [
+        0.1,
+        0.3,
+        1,
+        3
+      ]
+    },
+    "seed": 42,
+    "tuned": {
+      "param": "alpha",
+      "value": 0.1,
+      "val_scores": {
+        "0.1": 0.7217796399726845,
+        "0.3": 0.7121985859053922,
+        "1": 0.6447948224208209,
+        "3": 0.41582691447433967
+      }
+    }
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.775,
+    "macro_f1": 0.7007728247095342,
+    "weighted_f1": 0.7725991315290998,
+    "per_class": {
+      "sadness": {
+        "precision": 0.8129251700680272,
+        "recall": 0.8227194492254734,
+        "f1": 0.8177929854576561,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.8133514986376021,
+        "recall": 0.8589928057553957,
+        "f1": 0.8355493351994402,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.6344827586206897,
+        "recall": 0.5786163522012578,
+        "f1": 0.6052631578947368,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.7296296296296296,
+        "recall": 0.7163636363636363,
+        "f1": 0.7229357798165138,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.7428571428571429,
+        "recall": 0.6964285714285714,
+        "f1": 0.7188940092165899,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.5660377358490566,
+        "recall": 0.45454545454545453,
+        "f1": 0.5042016806722689,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        478,
+        39,
+        10,
+        34,
+        16,
+        4
+      ],
+      [
+        29,
+        597,
+        34,
+        19,
+        10,
+        6
+      ],
+      [
+        10,
+        44,
+        92,
+        6,
+        3,
+        4
+      ],
+      [
+        31,
+        27,
+        4,
+        197,
+        14,
+        2
+      ],
+      [
+        34,
+        10,
+        4,
+        13,
+        156,
+        7
+      ],
+      [
+        6,
+        17,
+        1,
+        1,
+        11,
+        30
+      ]
+    ]
+  },
+  "train_seconds": 0.12450654100393876,
+  "infer_seconds_per_1k": 0.005992104001052212,
+  "n_params": null,
+  "device": "cpu",
+  "seed": 42,
+  "git_sha": "1ddc1fc8bd3b0b2482e8ed2cbe6b9037c7237c1d",
+  "predictions_path": "preds/E1-bow_nb_12-test-42-20261121T083402.csv"
+}

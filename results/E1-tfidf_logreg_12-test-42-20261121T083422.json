@@ -1,0 +1,146 @@
+{
+  "run_id": "E1-tfidf_logreg_12-test-42-20261121T083422",
+  "experiment": "E1",
+  "model": "tfidf_logreg_12",
+  "config": {
+    "experiment": "E1",
+    "family": "classical",
+    "vectorizer": {
+      "kind": "tfidf",
+      "ngram_range": [
+        1,
+        2
+      ],
+      "min_df": 2,
+      "max_features": null,
+      "stop_words": null
+    },
+    "classifier": {
+      "kind": "logreg",
+      "class_weight": null
+    },
+    "tuning": {
+      "param": "C",
+      "values": [
+        0.1,
+        0.3,
+        1,
+        3,
+        10
+      ]
+    },
+    "seed": 42,
+    "tuned": {
+      "param": "C",
+      "value": 10,
+      "val_scores": {
+        "0.1": 0.26758640400094463,
+        "0.3": 0.49892594539414753,
+        "1": 0.7478536554699965,
+        "3": 0.8240522214037718,
+        "10": 0.8433427921925601
+      }
+    }
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.8655,
+    "macro_f1": 0.8034355200022741,
+    "weighted_f1": 0.8628372126038865,
+    "per_class": {
+      "sadness": {
+        "precision": 0.8885191347753744,
+        "recall": 0.919104991394148,
+        "f1": 0.9035532994923858,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.8622516556291391,
+        "recall": 0.9366906474820144,
+        "f1": 0.8979310344827586,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.7819548872180451,
+        "recall": 0.6540880503144654,
+        "f1": 0.7123287671232876,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.8949416342412452,
+        "recall": 0.8363636363636363,
+        "f1": 0.8646616541353384,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.875,
+        "recall": 0.78125,
+        "f1": 0.8254716981132075,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.6851851851851852,
+        "recall": 0.5606060606060606,
+        "f1": 0.6166666666666667,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        534,
+        20,
+        3,
+        16,
+        8,
+        0
+      ],
+      [
+        9,
+        651,
+        25,
+        2,
+        1,
+        7
+      ],
+      [
+        8,
+        44,
+        104,
+        2,
+        0,
+        1
+      ],
+      [
+        24,
+        14,
+        1,
+        230,
+        6,
+        0
+      ],
+      [
+        22,
+        12,
+        0,
+        6,
+        175,
+        9
+      ],
+      [
+        4,
+        14,
+        0,
+        1,
+        10,
+        37
+      ]
+    ]
+  },
+  "train_seconds": 1.5013852919946657,
+  "infer_seconds_per_1k": 0.006418937504349742,
+  "n_params": null,
+  "device": "cpu",
+  "seed": 42,
+  "git_sha": "1ddc1fc8bd3b0b2482e8ed2cbe6b9037c7237c1d",
+  "predictions_path": "preds/E1-tfidf_logreg_12-test-42-20261121T083422.csv"
+}

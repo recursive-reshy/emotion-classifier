@@ -1,0 +1,112 @@
+{
+  "run_id": "E0-stratified-val-42-20261121T083343",
+  "experiment": "E0",
+  "model": "stratified",
+  "config": {
+    "experiment": "E0",
+    "family": "baseline",
+    "strategy": "stratified",
+    "seed": 42
+  },
+  "split": "val",
+  "metrics": {
+    "accuracy": 0.2435,
+    "macro_f1": 0.17117384259792026,
+    "weighted_f1": 0.244462969272054,
+    "per_class": {
+      "sadness": {
+        "precision": 0.29359430604982206,
+        "recall": 0.3,
+        "f1": 0.29676258992805754,
+        "support": 550
+      },
+      "joy": {
+        "precision": 0.3559822747415066,
+        "recall": 0.34232954545454547,
+        "f1": 0.3490224475018103,
+        "support": 704
+      },
+      "love": {
+        "precision": 0.09467455621301775,
+        "recall": 0.0898876404494382,
+        "f1": 0.09221902017291066,
+        "support": 178
+      },
+      "anger": {
+        "precision": 0.1423487544483986,
+        "recall": 0.14545454545454545,
+        "f1": 0.14388489208633093,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.08860759493670886,
+        "recall": 0.09905660377358491,
+        "f1": 0.0935412026726058,
+        "support": 212
+      },
+      "surprise": {
+        "precision": 0.05405405405405406,
+        "recall": 0.04938271604938271,
+        "f1": 0.05161290322580645,
+        "support": 81
+      }
+    },
+    "confusion": [
+      [
+        165,
+        173,
+        51,
+        76,
+        61,
+        24
+      ],
+      [
+        177,
+        241,
+        55,
+        101,
+        102,
+        28
+      ],
+      [
+        48,
+        64,
+        16,
+        28,
+        18,
+        4
+      ],
+      [
+        82,
+        101,
+        19,
+        40,
+        24,
+        9
+      ],
+      [
+        63,
+        74,
+        20,
+        29,
+        21,
+        5
+      ],
+      [
+        27,
+        24,
+        8,
+        7,
+        11,
+        4
+      ]
+    ]
+  },
+  "train_seconds": 0.0009474170074099675,
+  "infer_seconds_per_1k": 0.0001973750040633604,
+  "n_params": null,
+  "device": "cpu",
+  "seed": 42,
+  "git_sha": "1ddc1fc8bd3b0b2482e8ed2cbe6b9037c7237c1d",
+  "predictions_path": "preds/E0-stratified-val-42-20261121T083343.csv"
+}

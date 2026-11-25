@@ -1,0 +1,146 @@
+{
+  "run_id": "E1-bow_svm_11-test-42-20261121T083404",
+  "experiment": "E1",
+  "model": "bow_svm_11",
+  "config": {
+    "experiment": "E1",
+    "family": "classical",
+    "vectorizer": {
+      "kind": "bow",
+      "ngram_range": [
+        1,
+        1
+      ],
+      "min_df": 2,
+      "max_features": null,
+      "stop_words": null
+    },
+    "classifier": {
+      "kind": "svm",
+      "class_weight": null
+    },
+    "tuning": {
+      "param": "C",
+      "values": [
+        0.1,
+        0.3,
+        1,
+        3,
+        10
+      ]
+    },
+    "seed": 42,
+    "tuned": {
+      "param": "C",
+      "value": 0.1,
+      "val_scores": {
+        "0.1": 0.8766384849009318,
+        "0.3": 0.8669463508589126,
+        "1": 0.8558196294593793,
+        "3": 0.8461442445749557,
+        "10": 0.8298560813624124
+      }
+    }
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.899,
+    "macro_f1": 0.8414162453535713,
+    "weighted_f1": 0.8981187394911833,
+    "per_class": {
+      "sadness": {
+        "precision": 0.9397590361445783,
+        "recall": 0.9397590361445783,
+        "f1": 0.9397590361445783,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.9130434782608695,
+        "recall": 0.9366906474820144,
+        "f1": 0.9247159090909091,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.8157894736842105,
+        "recall": 0.779874213836478,
+        "f1": 0.797427652733119,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.8884892086330936,
+        "recall": 0.8981818181818182,
+        "f1": 0.8933092224231465,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.8761467889908257,
+        "recall": 0.8526785714285714,
+        "f1": 0.8642533936651584,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.6724137931034483,
+        "recall": 0.5909090909090909,
+        "f1": 0.6290322580645161,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        546,
+        11,
+        1,
+        16,
+        6,
+        1
+      ],
+      [
+        6,
+        651,
+        26,
+        3,
+        3,
+        6
+      ],
+      [
+        1,
+        31,
+        124,
+        2,
+        0,
+        1
+      ],
+      [
+        13,
+        7,
+        1,
+        247,
+        7,
+        0
+      ],
+      [
+        13,
+        1,
+        0,
+        8,
+        191,
+        11
+      ],
+      [
+        2,
+        12,
+        0,
+        2,
+        11,
+        39
+      ]
+    ]
+  },
+  "train_seconds": 0.32653933300753124,
+  "infer_seconds_per_1k": 0.0029762919948552735,
+  "n_params": null,
+  "device": "cpu",
+  "seed": 42,
+  "git_sha": "1ddc1fc8bd3b0b2482e8ed2cbe6b9037c7237c1d",
+  "predictions_path": "preds/E1-bow_svm_11-test-42-20261121T083404.csv"
+}

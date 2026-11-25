@@ -1,0 +1,144 @@
+{
+  "run_id": "E1-bow_nb_11-val-42-20261121T083400",
+  "experiment": "E1",
+  "model": "bow_nb_11",
+  "config": {
+    "experiment": "E1",
+    "family": "classical",
+    "vectorizer": {
+      "kind": "bow",
+      "ngram_range": [
+        1,
+        1
+      ],
+      "min_df": 2,
+      "max_features": null,
+      "stop_words": null
+    },
+    "classifier": {
+      "kind": "nb",
+      "class_weight": null
+    },
+    "tuning": {
+      "param": "alpha",
+      "values": [
+        0.1,
+        0.3,
+        1,
+        3
+      ]
+    },
+    "seed": 42,
+    "tuned": {
+      "param": "alpha",
+      "value": 0.3,
+      "val_scores": {
+        "0.1": 0.7298602730467177,
+        "0.3": 0.7581851970102021,
+        "1": 0.7146684413552289,
+        "3": 0.5115789074866325
+      }
+    }
+  },
+  "split": "val",
+  "metrics": {
+    "accuracy": 0.824,
+    "macro_f1": 0.7581851970102021,
+    "weighted_f1": 0.8212088028561596,
+    "per_class": {
+      "sadness": {
+        "precision": 0.8174342105263158,
+        "recall": 0.9036363636363637,
+        "f1": 0.8583765112262521,
+        "support": 550
+      },
+      "joy": {
+        "precision": 0.870604781997187,
+        "recall": 0.8792613636363636,
+        "f1": 0.8749116607773851,
+        "support": 704
+      },
+      "love": {
+        "precision": 0.821917808219178,
+        "recall": 0.6741573033707865,
+        "f1": 0.7407407407407407,
+        "support": 178
+      },
+      "anger": {
+        "precision": 0.8307692307692308,
+        "recall": 0.7854545454545454,
+        "f1": 0.8074766355140187,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.7429906542056075,
+        "recall": 0.75,
+        "f1": 0.7464788732394366,
+        "support": 212
+      },
+      "surprise": {
+        "precision": 0.6065573770491803,
+        "recall": 0.4567901234567901,
+        "f1": 0.5211267605633803,
+        "support": 81
+      }
+    },
+    "confusion": [
+      [
+        497,
+        15,
+        4,
+        15,
+        14,
+        5
+      ],
+      [
+        35,
+        619,
+        18,
+        16,
+        12,
+        4
+      ],
+      [
+        15,
+        34,
+        120,
+        4,
+        3,
+        2
+      ],
+      [
+        23,
+        15,
+        2,
+        216,
+        15,
+        4
+      ],
+      [
+        22,
+        12,
+        2,
+        8,
+        159,
+        9
+      ],
+      [
+        16,
+        16,
+        0,
+        1,
+        11,
+        37
+      ]
+    ]
+  },
+  "train_seconds": 0.05007870800909586,
+  "infer_seconds_per_1k": 0.002909541995904874,
+  "n_params": null,
+  "device": "cpu",
+  "seed": 42,
+  "git_sha": "1ddc1fc8bd3b0b2482e8ed2cbe6b9037c7237c1d",
+  "predictions_path": "preds/E1-bow_nb_11-val-42-20261121T083400.csv"
+}

@@ -1,0 +1,146 @@
+{
+  "run_id": "E2-bow_svm_11_balanced-test-42-20261121T090404",
+  "experiment": "E2",
+  "model": "bow_svm_11_balanced",
+  "config": {
+    "experiment": "E2",
+    "family": "classical",
+    "vectorizer": {
+      "kind": "bow",
+      "ngram_range": [
+        1,
+        1
+      ],
+      "min_df": 2,
+      "max_features": null,
+      "stop_words": null
+    },
+    "classifier": {
+      "kind": "svm",
+      "class_weight": "balanced"
+    },
+    "tuning": {
+      "param": "C",
+      "values": [
+        0.1,
+        0.3,
+        1,
+        3,
+        10
+      ]
+    },
+    "seed": 42,
+    "tuned": {
+      "param": "C",
+      "value": 0.1,
+      "val_scores": {
+        "0.1": 0.8773135506890286,
+        "0.3": 0.8719593270510404,
+        "1": 0.855514229106333,
+        "3": 0.8425895197947998,
+        "10": 0.8329551870127586
+      }
+    }
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.896,
+    "macro_f1": 0.8486234827142766,
+    "weighted_f1": 0.8982196715041976,
+    "per_class": {
+      "sadness": {
+        "precision": 0.9472759226713533,
+        "recall": 0.927710843373494,
+        "f1": 0.9373913043478261,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.9509954058192955,
+        "recall": 0.8935251798561151,
+        "f1": 0.9213649851632048,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.7171717171717171,
+        "recall": 0.8930817610062893,
+        "f1": 0.7955182072829131,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.8920863309352518,
+        "recall": 0.9018181818181819,
+        "f1": 0.8969258589511754,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.8727272727272727,
+        "recall": 0.8571428571428571,
+        "f1": 0.8648648648648649,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.6097560975609756,
+        "recall": 0.7575757575757576,
+        "f1": 0.6756756756756757,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        539,
+        10,
+        3,
+        19,
+        7,
+        3
+      ],
+      [
+        7,
+        621,
+        50,
+        3,
+        4,
+        10
+      ],
+      [
+        1,
+        13,
+        142,
+        2,
+        0,
+        1
+      ],
+      [
+        11,
+        4,
+        2,
+        248,
+        9,
+        1
+      ],
+      [
+        9,
+        0,
+        1,
+        5,
+        192,
+        17
+      ],
+      [
+        2,
+        5,
+        0,
+        1,
+        8,
+        50
+      ]
+    ]
+  },
+  "train_seconds": 0.33506570900499355,
+  "infer_seconds_per_1k": 0.00300370849436149,
+  "n_params": null,
+  "device": "cpu",
+  "seed": 42,
+  "git_sha": "1ddc1fc8bd3b0b2482e8ed2cbe6b9037c7237c1d",
+  "predictions_path": "preds/E2-bow_svm_11_balanced-test-42-20261121T090404.csv"
+}
