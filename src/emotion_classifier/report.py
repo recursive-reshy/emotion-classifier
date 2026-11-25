@@ -26,18 +26,21 @@ def _mean_std( values: list[ float | None ] ) -> tuple[ float | None, float | No
         return None, None
     return statistics.fmean( values ), ( statistics.stdev( values ) if len( values ) > 1 else None )
 
-def summarise( results: list[ RunResult ] ) -> list[ dict ]:
-    """One row per ( experiment, model), test split only. Mean and sample std over seeds;
-    a seed run more than once counts once, using its latest run. Rows are ordered by experiment,
-    then best macro-F1 first."""
+def latest_runs( results: list[ RunResult ], split: str = "test" ) -> list[ RunResult ]:
+    """Results for one split, keeping only the latest run of each ( experiment, model, seed ),
+    so a re-run replaces the earlier run instead of counting as another seed."""
     latest: dict[ tuple, RunResult ] = {}
     for result in sorted( results, key = lambda result: result.run_id ):
-        if result.split == "test":
+        if result.split == split:
             latest[ ( result.experiment, result.model, result.seed ) ] = result
+    return list( latest.values() )
 
+def summarise( results: list[ RunResult ] ) -> list[ dict ]:
+    """One row per ( experiment, model), test split only. Mean and sample std over seeds
+    (latest run per seed). Rows are ordered by experiment, then best macro-F1 first."""
     groups: dict[ tuple, list[ RunResult ] ] = defaultdict( list )
-    for ( experiment, model, _ ), result in latest.items():
-        groups[ ( experiment, model ) ].append( result )
+    for result in latest_runs( results, "test" ):
+        groups[ ( result.experiment, result.model ) ].append( result )
 
     rows = []
     for ( experiment, model ), group in groups.items():
