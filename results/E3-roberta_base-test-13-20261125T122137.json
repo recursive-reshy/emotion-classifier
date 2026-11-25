@@ -1,0 +1,123 @@
+{
+  "run_id": "E3-roberta_base-test-13-20261125T122137",
+  "experiment": "E3",
+  "model": "roberta_base",
+  "config": {
+    "experiment": "E3",
+    "family": "transformer",
+    "model_name": "roberta-base",
+    "max_length": 88,
+    "lr": 5e-05,
+    "epochs": 4,
+    "batch_size": 32,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "early_stopping_patience": 2,
+    "seeds": [
+      13,
+      42,
+      7
+    ]
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.935,
+    "macro_f1": 0.8891246646796708,
+    "weighted_f1": 0.933977664830051,
+    "per_class": {
+      "sadness": {
+        "precision": 0.9675213675213675,
+        "recall": 0.9741824440619621,
+        "f1": 0.9708404802744426,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.9362880886426593,
+        "recall": 0.9726618705035971,
+        "f1": 0.9541284403669725,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.9242424242424242,
+        "recall": 0.7672955974842768,
+        "f1": 0.8384879725085911,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.9581749049429658,
+        "recall": 0.9163636363636364,
+        "f1": 0.9368029739776952,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.8702928870292888,
+        "recall": 0.9285714285714286,
+        "f1": 0.8984881209503239,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.7796610169491526,
+        "recall": 0.696969696969697,
+        "f1": 0.736,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        566,
+        1,
+        0,
+        8,
+        6,
+        0
+      ],
+      [
+        4,
+        676,
+        10,
+        1,
+        1,
+        3
+      ],
+      [
+        0,
+        37,
+        122,
+        0,
+        0,
+        0
+      ],
+      [
+        10,
+        2,
+        0,
+        252,
+        11,
+        0
+      ],
+      [
+        4,
+        0,
+        0,
+        2,
+        208,
+        10
+      ],
+      [
+        1,
+        6,
+        0,
+        0,
+        13,
+        46
+      ]
+    ]
+  },
+  "train_seconds": 523.9386264999921,
+  "infer_seconds_per_1k": 2.278725416501402,
+  "n_params": 124650246,
+  "device": "mps",
+  "seed": 13,
+  "git_sha": "9ac102b62e4a57c4b29df161cc6e01fbccd06b0f",
+  "predictions_path": "preds/E3-roberta_base-test-13-20261125T122137.csv"
+}
