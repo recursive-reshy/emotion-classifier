@@ -1,0 +1,114 @@
+{
+  "run_id": "E4-bart_mnli-test-42-20261125T134951",
+  "experiment": "E4",
+  "model": "bart_mnli",
+  "config": {
+    "experiment": "E4",
+    "family": "zeroshot",
+    "model_name": "facebook/bart-large-mnli",
+    "hypothesis_template": "This text expresses {}.",
+    "batch_size": 16,
+    "seed": 42
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.466,
+    "macro_f1": 0.43326172556168624,
+    "weighted_f1": 0.5240980781153325,
+    "per_class": {
+      "sadness": {
+        "precision": 0.6687116564417178,
+        "recall": 0.5628227194492255,
+        "f1": 0.611214953271028,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.8228571428571428,
+        "recall": 0.4143884892086331,
+        "f1": 0.5511961722488038,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.33636363636363636,
+        "recall": 0.23270440251572327,
+        "f1": 0.275092936802974,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.6526315789473685,
+        "recall": 0.4509090909090909,
+        "f1": 0.5333333333333333,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.5070422535211268,
+        "recall": 0.48214285714285715,
+        "f1": 0.494279176201373,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.07407407407407407,
+        "recall": 0.7272727272727273,
+        "f1": 0.13445378151260504,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        327,
+        13,
+        9,
+        36,
+        47,
+        149
+      ],
+      [
+        55,
+        288,
+        61,
+        15,
+        24,
+        252
+      ],
+      [
+        27,
+        31,
+        37,
+        3,
+        5,
+        56
+      ],
+      [
+        50,
+        8,
+        1,
+        124,
+        27,
+        65
+      ],
+      [
+        25,
+        1,
+        1,
+        11,
+        108,
+        78
+      ],
+      [
+        5,
+        9,
+        1,
+        1,
+        2,
+        48
+      ]
+    ]
+  },
+  "train_seconds": null,
+  "infer_seconds_per_1k": 39.311812500003725,
+  "n_params": 407344131,
+  "device": "mps",
+  "seed": 42,
+  "git_sha": "2f68424079e7d73b092080eba87e6784c332a79a",
+  "predictions_path": "preds/E4-bart_mnli-test-42-20261125T134951.csv"
+}
