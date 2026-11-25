@@ -1,0 +1,7 @@
+experiment: E6
+family: classical
+vectorizer: { kind: bow, ngram_range: [ 1, 1 ], min_df: 2, max_features: null, stop_words: english }
+classifier: { kind: svm, class_weight: balanced }
+tuning: { param: C, values: [ 0.1, 0.3, 1, 3, 10 ] }
+seed: 42
+train_fraction: 0.25

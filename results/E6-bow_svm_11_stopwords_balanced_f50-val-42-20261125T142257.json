@@ -1,0 +1,147 @@
+{
+  "run_id": "E6-bow_svm_11_stopwords_balanced_f50-val-42-20261125T142257",
+  "experiment": "E6",
+  "model": "bow_svm_11_stopwords_balanced_f50",
+  "config": {
+    "experiment": "E6",
+    "family": "classical",
+    "vectorizer": {
+      "kind": "bow",
+      "ngram_range": [
+        1,
+        1
+      ],
+      "min_df": 2,
+      "max_features": null,
+      "stop_words": "english"
+    },
+    "classifier": {
+      "kind": "svm",
+      "class_weight": "balanced"
+    },
+    "tuning": {
+      "param": "C",
+      "values": [
+        0.1,
+        0.3,
+        1,
+        3,
+        10
+      ]
+    },
+    "seed": 42,
+    "train_fraction": 0.5,
+    "tuned": {
+      "param": "C",
+      "value": 0.3,
+      "val_scores": {
+        "0.1": 0.8687761404677742,
+        "0.3": 0.8716517322315861,
+        "1": 0.8643301630656613,
+        "3": 0.8544726530025919,
+        "10": 0.8424382426181053
+      }
+    }
+  },
+  "split": "val",
+  "metrics": {
+    "accuracy": 0.895,
+    "macro_f1": 0.8716517322315861,
+    "weighted_f1": 0.8956389287860071,
+    "per_class": {
+      "sadness": {
+        "precision": 0.9301470588235294,
+        "recall": 0.92,
+        "f1": 0.9250457038391224,
+        "support": 550
+      },
+      "joy": {
+        "precision": 0.9322533136966127,
+        "recall": 0.8991477272727273,
+        "f1": 0.9154013015184381,
+        "support": 704
+      },
+      "love": {
+        "precision": 0.7989949748743719,
+        "recall": 0.8932584269662921,
+        "f1": 0.843501326259947,
+        "support": 178
+      },
+      "anger": {
+        "precision": 0.8941605839416058,
+        "recall": 0.8909090909090909,
+        "f1": 0.8925318761384335,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.8365384615384616,
+        "recall": 0.8207547169811321,
+        "f1": 0.8285714285714286,
+        "support": 212
+      },
+      "surprise": {
+        "precision": 0.7604166666666666,
+        "recall": 0.9012345679012346,
+        "f1": 0.8248587570621468,
+        "support": 81
+      }
+    },
+    "confusion": [
+      [
+        506,
+        14,
+        6,
+        11,
+        10,
+        3
+      ],
+      [
+        14,
+        633,
+        33,
+        8,
+        8,
+        8
+      ],
+      [
+        2,
+        14,
+        159,
+        2,
+        1,
+        0
+      ],
+      [
+        9,
+        7,
+        1,
+        245,
+        12,
+        1
+      ],
+      [
+        13,
+        7,
+        0,
+        7,
+        174,
+        11
+      ],
+      [
+        0,
+        4,
+        0,
+        1,
+        3,
+        73
+      ]
+    ]
+  },
+  "train_seconds": 0.07948254200164229,
+  "infer_seconds_per_1k": 0.002825895993737504,
+  "n_params": null,
+  "device": "cpu",
+  "seed": 42,
+  "git_sha": "89ed94e356404ce3bd6f8273bce2e1102d4e26c7",
+  "predictions_path": "preds/E6-bow_svm_11_stopwords_balanced_f50-val-42-20261125T142257.csv"
+}

@@ -39,6 +39,7 @@ class ClassicalConfig:
     classifier: ClassifierConfig
     tuning: TuningConfig
     seed: int
+    train_fraction: float | None = None  # stratified share of train (E6 learning curve); None = all
 
 @dataclass( frozen = True )
 class BaselineConfig:
@@ -60,6 +61,7 @@ class TransformerConfig:
     warmup_ratio: float
     early_stopping_patience: int
     seeds: list[ int ]
+    train_fraction: float | None = None  # stratified share of train (E6 learning curve); None = all
 
 @dataclass( frozen = True )
 class ZeroShotConfig:
@@ -70,13 +72,24 @@ class ZeroShotConfig:
     batch_size: int
     seed: int
 
-Config = ClassicalConfig | BaselineConfig | TransformerConfig | ZeroShotConfig
+@dataclass( frozen = True )
+class LLMConfig:
+    """Zero-shot instruct LLM (E5). Decoding is always greedy (temperature 0), so there is no temperature key."""
+    experiment: str
+    family: str
+    model_name: str
+    batch_size: int
+    max_new_tokens: int
+    seed: int
+
+Config = ClassicalConfig | BaselineConfig | TransformerConfig | ZeroShotConfig | LLMConfig
 
 FAMILIES = {
     "classical": ClassicalConfig,
     "baseline": BaselineConfig,
     "transformer": TransformerConfig,
     "zeroshot": ZeroShotConfig,
+    "llm": LLMConfig,
 }
 
 # Nested dataclasses, by field name.
@@ -136,6 +149,15 @@ def _build( cls: type, data: Any, where: str ):
         if not 1 <= low <= high:
             raise ConfigError( f"{ where }: ngram_range must satisfy 1 <= low <= high, got { [ low, high ] }" )
         kwargs[ "ngram_range" ] = ( low, high )
+
+    fraction = kwargs.get( "train_fraction" )
+    if fraction is not None and not 0 < fraction <= 1:
+        raise ConfigError( f"{ where }: train_fraction must be in (0, 1], got { fraction }" )
+    for name in ( "batch_size", "max_new_tokens" ):
+        if name in kwargs and kwargs[ name ] < 1:
+            raise ConfigError( f"{ where }: { name } must be >= 1, got { kwargs[ name ] }" )
+    if "seeds" in kwargs and not kwargs[ "seeds" ]:
+        raise ConfigError( f"{ where }: seeds must not be empty" )
 
     _check_choice( cls, kwargs, where )
     return cls( **kwargs )

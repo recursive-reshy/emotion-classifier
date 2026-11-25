@@ -8,7 +8,7 @@ import typer
 
 from emotion_classifier.classical import run_experiment
 from emotion_classifier import plots, transformer, zeroshot
-from emotion_classifier.config import BaselineConfig, ClassicalConfig, ConfigError, TransformerConfig, ZeroShotConfig, load_config
+from emotion_classifier.config import BaselineConfig, ClassicalConfig, ConfigError, LLMConfig, TransformerConfig, ZeroShotConfig, load_config
 from emotion_classifier.data import load_emotion
 from emotion_classifier.report import summarise, write_summary
 from emotion_classifier.results import load_results
@@ -47,13 +47,22 @@ def _run_config( config_path: Path, split: Split, results_dir: Path, output_dir:
     if isinstance( cfg, TransformerConfig ):
         results = transformer.run_transformer_experiment(
             cfg,
-            load_emotion(),
+            load_emotion( subsample = cfg.train_fraction, seed = cfg.seeds[ 0 ] ),  # same subset as a classical run seeded alike
             config_path.stem,
             results_dir,
             output_dir,
             _timestamp(),
             git_sha = _git_sha(),
             splits_to_save = split.value,
+        )
+    elif isinstance( cfg, LLMConfig ):
+        results = zeroshot.run_llm_experiment(  # test only, like the NLI zero-shot run
+            cfg,
+            load_emotion(),
+            config_path.stem,
+            results_dir,
+            _timestamp(),
+            git_sha = _git_sha(),
         )
     elif isinstance( cfg, ZeroShotConfig ):
         results = zeroshot.run_zeroshot_experiment(  # always test only: no tuning (TRD §4.5), so --split is ignored
@@ -67,7 +76,7 @@ def _run_config( config_path: Path, split: Split, results_dir: Path, output_dir:
     elif isinstance( cfg, ( ClassicalConfig, BaselineConfig ) ):
         results = run_experiment(
             cfg,
-            load_emotion( seed = cfg.seed ),
+            load_emotion( subsample = getattr( cfg, "train_fraction", None ), seed = cfg.seed ),
             config_path.stem,
             results_dir,
             _timestamp(),
@@ -78,7 +87,8 @@ def _run_config( config_path: Path, split: Split, results_dir: Path, output_dir:
         _not_implemented( f"family '{cfg.family}'" )
 
     for result in results:
-        typer.echo( f"{result.run_id}: macro_f1 = {result.metrics[ 'macro_f1' ]:.4f}" )
+        invalid = f", invalid = {result.metrics[ 'invalid_rate' ]:.1%}" if "invalid_rate" in result.metrics else ""
+        typer.echo( f"{result.run_id}: macro_f1 = {result.metrics[ 'macro_f1' ]:.4f}{invalid}" )
 
 @app.command()
 def run(

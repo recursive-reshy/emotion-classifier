@@ -123,3 +123,16 @@ def test_markdown_keeps_precision_for_small_times():
 def test_markdown_rounds_large_times_to_whole_seconds():
     line = next( line for line in to_markdown( summarise( three_seeds() ) ).splitlines() if "distilbert" in line )
     assert "250 ± 10" in line
+
+def test_summary_includes_the_invalid_rate_for_llm_runs_only():
+    llm = make_result( experiment = "E5", model = "qwen", train_seconds = None )
+    llm.metrics[ "invalid_rate" ] = 0.05
+    rows = summarise( [ llm, make_result( experiment = "E4", model = "bart_mnli", train_seconds = None ) ] )
+    by_model = { row[ "model" ]: row for row in rows }
+
+    assert by_model[ "qwen" ][ "invalid_rate_mean" ] == pytest.approx( 0.05 )
+    assert by_model[ "bart_mnli" ][ "invalid_rate_mean" ] is None
+    lines = to_markdown( rows ).splitlines()
+    assert "Invalid" in lines[ 0 ]
+    assert "5.0%" in next( line for line in lines if "qwen" in line )
+    assert "5.0%" not in next( line for line in lines if "bart_mnli" in line )

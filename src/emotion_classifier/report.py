@@ -12,6 +12,7 @@ MEASURES = {
     "weighted_f1": lambda result: result.metrics[ "weighted_f1" ],
     "train_seconds": lambda result: result.train_seconds,
     "infer_seconds_per_1k": lambda result: result.infer_seconds_per_1k,
+    "invalid_rate": lambda result: result.metrics.get( "invalid_rate" ),  # LLM runs only
 }
 
 SUMMARY_COLUMNS = [
@@ -70,13 +71,14 @@ def _cell( row: dict, name: str, decimals: int | None ) -> str:
     return text if std is None else f"{ text } ± { std:.{ decimals }f}"
 
 def to_markdown( rows: list[ dict ] ) -> str:
-    headers = [ "Experiment", "Model", "Seeds", "Accuracy", "macro-F1", "weighted-F1", "Train (s)", "Infer / 1k (s)", "Params" ]
+    headers = [ "Experiment", "Model", "Seeds", "Accuracy", "macro-F1", "weighted-F1", "Train (s)", "Infer / 1k (s)", "Invalid", "Params" ]
     lines = [ "| " + " | ".join( headers ) + " |", "|" + "|".join( [ "---" ] * len( headers ) ) + "|" ]
     for row in rows:
         cells = [
             row[ "experiment" ], row[ "model" ], str( row[ "n_seeds" ] ),
             _cell( row, "accuracy", 3 ), _cell( row, "macro_f1", 3 ), _cell( row, "weighted_f1", 3 ),
             _cell( row, "train_seconds", None ), _cell( row, "infer_seconds_per_1k", None ),
+            "—" if row[ "invalid_rate_mean" ] is None else f"{ row[ 'invalid_rate_mean' ]:.1%}",
             "—" if row[ "n_params" ] is None else f"{ row[ 'n_params' ]:,}",
         ]
         lines.append( "| " + " | ".join( cells ) + " |" )

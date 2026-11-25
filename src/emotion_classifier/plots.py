@@ -4,6 +4,7 @@ Design: light surface, text in ink tokens (never the series colour), recessive g
 sequential ramp for the confusion matrices, and the first three slots of the categorical palette
 (validated all-pairs) for classical / transformer / zero-shot. The aqua slot is below 3:1 contrast
 on the surface, so bars carry value labels and the scatter uses a different marker per family."""
+import re
 from pathlib import Path
 
 import numpy as np
@@ -23,7 +24,7 @@ GRID = "#dcdbd6"
 BLUE_RAMP = [ "#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b" ]
 
 # Family -> experiments, in the order they appear in every figure. E0 (dummy baselines) is not a family.
-FAMILIES = { "Classical": ( "E1", "E2" ), "Transformer": ( "E3", ), "Zero-shot": ( "E4", ) }
+FAMILIES = { "Classical": ( "E1", "E2" ), "Transformer": ( "E3", ), "Zero-shot": ( "E4", "E5" ) }
 FAMILY_COLOUR = { "Classical": "#2a78d6", "Transformer": "#eb6834", "Zero-shot": "#1baf7a" }
 FAMILY_MARKER = { "Classical": "o", "Transformer": "s", "Zero-shot": "^" }
 
@@ -39,7 +40,7 @@ def _require_test_results( results: list[ RunResult ] ) -> None:
 
 def _select_family( results: list[ RunResult ], family: str ) -> str | None:
     """Best model of one family by mean validation macro-F1 (never test, TRD §4); None if the family has no test results.
-    Zero-shot has no validation run, so its model is taken as-is when it is the only one."""
+    Zero-shot has no validation run, so the first experiment of the family (NLI before LLM) is used."""
     candidates = sorted( { r.model for r in latest_runs( results, "test" ) if r.experiment in FAMILIES[ family ] } )
     validation: dict[ str, list[ float ] ] = {}
     for result in latest_runs( results, "val" ):
@@ -48,9 +49,13 @@ def _select_family( results: list[ RunResult ], family: str ) -> str | None:
     scores = { model: sum( validation[ model ] ) / len( validation[ model ] ) for model in candidates if model in validation }
     if scores:
         return max( sorted( scores ), key = scores.get )
-    if len( candidates ) > 1:
-        raise ValueError( f"{ family }: { candidates } have no validation results, so choose one explicitly" )
-    return candidates[ 0 ] if candidates else None
+
+    # No validation runs (zero-shot): take the family's first experiment that has results, e.g. NLI before LLM.
+    by_experiment = [ sorted( { r.model for r in latest_runs( results, "test" ) if r.experiment == experiment } ) for experiment in FAMILIES[ family ] ]
+    first = next( ( models for models in by_experiment if models ), [] )
+    if len( first ) > 1:
+        raise ValueError( f"{ family }: { first } have no validation results, so choose one explicitly" )
+    return first[ 0 ] if first else None
 
 def select_models( results: list[ RunResult ] ) -> dict[ str, str ]:
     """The model shown per family, chosen on validation macro-F1: { family: model } for families that have test results."""
@@ -254,12 +259,70 @@ def plot_f1_vs_cost( results: list[ RunResult ], path: Path, selected: dict[ str
     figure.tight_layout( rect = ( 0, 0.03, 1, 1 ) )
     return _save( figure, path )
 
+def learning_curve_points( results: list[ RunResult ] ) -> dict[ str, list[ tuple[ float, float ] ] ]:
+    """E6 test results as { series: [ ( train_fraction, macro_f1 ), … ] }, sorted by fraction.
+    A series is the model name without its `_f<percent>` suffix; a missing fraction means the full train set."""
+    points: dict[ str, list[ tuple[ float, float ] ] ] = {}
+    for result in latest_runs( results, "test" ):
+        if result.experiment == "E6":
+            series = re.sub( r"_f\d+$", "", result.model )
+            points.setdefault( series, [] ).append( ( result.config.get( "train_fraction" ) or 1.0, result.metrics[ "macro_f1" ] ) )
+    return { series: sorted( curve ) for series, curve in sorted( points.items() ) }
+
+def plot_learning_curve( results: list[ RunResult ], path: Path ) -> Path:
+    """Test macro-F1 against the share of the training set used (E6), one line per series, log x."""
+    points = learning_curve_points( results )
+    if not points:
+        raise ValueError( "no E6 test results to plot" )
+
+    families = {
+        re.sub( r"_f\d+$", "", result.model ): str( result.config.get( "family", "" ) ).capitalize()
+        for result in latest_runs( results, "test" ) if result.experiment == "E6"
+    }
+    fallback = list( FAMILY_COLOUR.values() )
+
+    figure = Figure( figsize = ( 7.0, 4.8 ), facecolor = SURFACE )
+    ax = figure.subplots()
+    _style_axes( ax )
+    ax.set_xscale( "log" )
+    ax.grid( True, color = GRID, linewidth = 0.8, zorder = 0 )
+    ax.set_axisbelow( True )
+
+    handles = []
+    for index, ( series, curve ) in enumerate( points.items() ):
+        family = families.get( series )
+        colour = FAMILY_COLOUR.get( family, fallback[ index % len( fallback ) ] )
+        marker = FAMILY_MARKER.get( family, "o" )
+        fractions, scores = zip( *curve )
+        ax.plot(
+            fractions, scores, color = colour, marker = marker, linewidth = 2, markersize = 8,
+            markeredgecolor = SURFACE, markeredgewidth = 1.5, zorder = 3,
+        )
+        ax.annotate( series, ( fractions[ -1 ], scores[ -1 ] ), xytext = ( 9, 0 ), textcoords = "offset points", va = "center", fontsize = 8.5, color = INK )
+        handles.append( Line2D( [], [], color = colour, marker = marker, linewidth = 2, markersize = 8, label = series ) )
+
+    ticks = sorted( { fraction for curve in points.values() for fraction, _ in curve } )
+    ax.set_xticks( ticks, [ f"{ fraction:.0%}" for fraction in ticks ] )
+    ax.minorticks_off()
+    ax.set_xlim( ticks[ 0 ] * 0.8, ticks[ -1 ] * 2.6 )  # room on the right for the line labels
+    ax.set_xlabel( "Share of the training set used (log scale)", color = INK_SECONDARY )
+    ax.set_ylabel( "Macro-F1 (test)", color = INK_SECONDARY )
+    ax.set_title( "Learning curve: macro-F1 against training data", loc = "left", color = INK, fontsize = 11 )
+    if len( handles ) > 1:
+        ax.legend( handles = handles, loc = "lower right", frameon = False, fontsize = 9, labelcolor = INK )
+    figure.text( 0.01, 0.01, "100% = the full training split. Stratified subsets, one seed.", fontsize = 7.5, color = INK_SECONDARY )
+    figure.tight_layout( rect = ( 0, 0.03, 1, 1 ) )
+    return _save( figure, path )
+
 def make_all( results: list[ RunResult ], figures_dir: Path, selected: dict[ str, str ] | None = None ) -> list[ Path ]:
     """Regenerate every figure into figures_dir (existing files are overwritten: figures are derived output)."""
     _require_test_results( results )
     figures_dir = Path( figures_dir )
-    return [
+    paths = [
         *plot_confusion_matrices( results, figures_dir, selected ),
         plot_per_class_f1( results, figures_dir / "per_class_f1.png", selected ),
         plot_f1_vs_cost( results, figures_dir / "f1_vs_cost.png", selected ),
     ]
+    if learning_curve_points( results ):  # E6 is optional
+        paths.append( plot_learning_curve( results, figures_dir / "learning_curve.png" ) )
+    return paths

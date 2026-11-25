@@ -221,3 +221,63 @@ def test_report_without_results_fails_with_a_clear_message( tmp_path ):
     result = _invoke( "report", "--results-dir", tmp_path / "empty", "--figures-dir", tmp_path / "figures" )
     assert result.exit_code != 0
     assert "No test results" in result.output
+
+def test_run_passes_train_fraction_to_the_loader_for_classical( tmp_path, monkeypatch, tiny_splits ):
+    calls = []
+    monkeypatch.setattr( "emotion_classifier.cli.load_emotion", lambda *args, **kwargs: calls.append( kwargs ) or tiny_splits )
+    config = tmp_path / "tfidf_logreg_12_f25.yaml"
+    config.write_text( CLASSICAL_YAML + "train_fraction: 0.25\n" )
+
+    assert _invoke( "run", config, "--results-dir", tmp_path / "results" ).exit_code == 0
+    assert calls[ 0 ][ "subsample" ] == 0.25
+    assert load_results( tmp_path / "results" )[ 0 ].config[ "train_fraction" ] == 0.25
+
+def test_run_passes_train_fraction_to_the_loader_for_transformer( tmp_path, monkeypatch, tiny_splits ):
+    calls = []
+    monkeypatch.setattr( "emotion_classifier.cli.load_emotion", lambda *args, **kwargs: calls.append( kwargs ) or tiny_splits )
+    monkeypatch.setattr(
+        "emotion_classifier.transformer.fine_tune",
+        lambda splits, cfg, seed, output_dir: FineTuneOutput(
+            model = None, tokenizer = None, val_pred = list( splits.val_labels ), test_pred = list( splits.test_labels ),
+            train_seconds = 1.0, val_infer_seconds_per_1k = 1.0, test_infer_seconds_per_1k = 1.0, n_params = 10, device = "cpu",
+        ),
+    )
+    config = tmp_path / "distilbert_f10.yaml"
+    config.write_text( TRANSFORMER_YAML.replace( "[ 13, 42, 7 ]", "[ 42 ]" ) + "train_fraction: 0.1\n" )
+
+    assert _invoke( "run", config, "--results-dir", tmp_path / "results", "--output-dir", tmp_path / "out" ).exit_code == 0
+    assert calls[ 0 ][ "subsample" ] == 0.1
+    assert calls[ 0 ][ "seed" ] == 42  # the subset is drawn with the first seed, matching the classical run
+
+def test_run_without_train_fraction_uses_the_full_train_split( tmp_path, monkeypatch, tiny_splits ):
+    calls = []
+    monkeypatch.setattr( "emotion_classifier.cli.load_emotion", lambda *args, **kwargs: calls.append( kwargs ) or tiny_splits )
+    config = tmp_path / "majority.yaml"
+    config.write_text( BASELINE_YAML )
+    assert _invoke( "run", config, "--results-dir", tmp_path / "results" ).exit_code == 0
+    assert calls[ 0 ].get( "subsample" ) is None
+
+LLM_YAML = """
+experiment: E5
+family: llm
+model_name: Qwen/Qwen3-4B-Instruct-2507
+batch_size: 16
+max_new_tokens: 8
+seed: 42
+"""
+
+def test_run_llm_config_writes_a_test_result_with_invalid_rate( fake_data, tmp_path, monkeypatch, tiny_splits ):
+    from emotion_classifier.data import LABELS
+
+    outputs = iter( [ LABELS[ label ] for label in tiny_splits.test_labels ] )
+    monkeypatch.setattr( "emotion_classifier.zeroshot.build_generator", lambda cfg, device: lambda prompts: [ next( outputs ) for _ in prompts ] )
+    config = tmp_path / "qwen3_4b_instruct.yaml"
+    config.write_text( LLM_YAML )
+
+    result = _invoke( "run", config, "--results-dir", tmp_path / "results" )
+
+    assert result.exit_code == 0, result.output
+    ( saved, ) = load_results( tmp_path / "results" )
+    assert ( saved.experiment, saved.model, saved.split ) == ( "E5", "qwen3_4b_instruct", "test" )
+    assert saved.metrics[ "invalid_rate" ] == 0.0
+    assert "invalid" in result.output.lower()

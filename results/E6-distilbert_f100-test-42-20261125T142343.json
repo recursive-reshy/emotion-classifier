@@ -1,0 +1,122 @@
+{
+  "run_id": "E6-distilbert_f100-test-42-20261125T142343",
+  "experiment": "E6",
+  "model": "distilbert_f100",
+  "config": {
+    "experiment": "E6",
+    "family": "transformer",
+    "model_name": "distilbert-base-uncased",
+    "max_length": 88,
+    "lr": 5e-05,
+    "epochs": 4,
+    "batch_size": 32,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "early_stopping_patience": 2,
+    "seeds": [
+      42
+    ],
+    "train_fraction": 1
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.9265,
+    "macro_f1": 0.8792993906553234,
+    "weighted_f1": 0.9261894732642192,
+    "per_class": {
+      "sadness": {
+        "precision": 0.9641638225255973,
+        "recall": 0.9724612736660929,
+        "f1": 0.9682947729220223,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.9467625899280575,
+        "recall": 0.9467625899280575,
+        "f1": 0.9467625899280575,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.8258064516129032,
+        "recall": 0.8050314465408805,
+        "f1": 0.8152866242038217,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.9205776173285198,
+        "recall": 0.9272727272727272,
+        "f1": 0.9239130434782609,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.8928571428571429,
+        "recall": 0.8928571428571429,
+        "f1": 0.8928571428571429,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.746031746031746,
+        "recall": 0.7121212121212122,
+        "f1": 0.7286821705426356,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        565,
+        3,
+        0,
+        8,
+        5,
+        0
+      ],
+      [
+        1,
+        658,
+        27,
+        3,
+        0,
+        6
+      ],
+      [
+        0,
+        29,
+        128,
+        2,
+        0,
+        0
+      ],
+      [
+        13,
+        2,
+        0,
+        255,
+        5,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        9,
+        200,
+        10
+      ],
+      [
+        2,
+        3,
+        0,
+        0,
+        14,
+        47
+      ]
+    ]
+  },
+  "train_seconds": 237.65408824998303,
+  "infer_seconds_per_1k": 0.943020874998183,
+  "n_params": 66958086,
+  "device": "mps",
+  "seed": 42,
+  "git_sha": "89ed94e356404ce3bd6f8273bce2e1102d4e26c7",
+  "predictions_path": "preds/E6-distilbert_f100-test-42-20261125T142343.csv"
+}
