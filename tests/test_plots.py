@@ -4,7 +4,7 @@ from emotion_classifier.data import LABELS
 from emotion_classifier.metrics import compute_metrics
 from emotion_classifier.plots import (
     make_all, mean_per_class_f1, plot_confusion_matrices, plot_confusion_matrix, plot_f1_vs_cost,
-    plot_per_class_f1, pooled_confusion, select_models,
+    plot_per_class_f1, pooled_confusion, resolve_selection, select_models,
 )
 from emotion_classifier.results import RunResult
 
@@ -120,3 +120,30 @@ def test_make_all_writes_every_figure( results, tmp_path ):
 def test_plots_refuse_to_draw_without_test_results( tmp_path ):
     with pytest.raises( ValueError, match = "test" ):
         make_all( [ make_result( "E1", "tfidf_svm_12", "val" ) ], tmp_path )
+
+def test_resolve_selection_without_overrides_is_the_validation_choice( results ):
+    assert resolve_selection( results, {} ) == select_models( results )
+
+def test_resolve_selection_override_replaces_only_that_family( results ):
+    selected = resolve_selection( results, { "Transformer": "roberta_base" } )
+    assert selected[ "Transformer" ] == "roberta_base"
+    assert selected[ "Classical" ] == "tfidf_svm_12"
+
+def test_resolve_selection_family_names_are_case_insensitive( results ):
+    assert resolve_selection( results, { "transformer": "roberta_base", "ZERO-SHOT": "bart_mnli" } )[ "Transformer" ] == "roberta_base"
+
+def test_resolve_selection_rejects_an_unknown_family( results ):
+    with pytest.raises( ValueError, match = "Classical" ):
+        resolve_selection( results, { "Linear": "tfidf_svm_12" } )
+
+def test_resolve_selection_rejects_a_model_from_another_family_or_missing( results ):
+    with pytest.raises( ValueError, match = "roberta_base" ):
+        resolve_selection( results, { "Classical": "roberta_base" } )
+    with pytest.raises( ValueError, match = "nope" ):
+        resolve_selection( results, { "Transformer": "nope" } )
+
+def test_resolve_selection_lets_an_override_settle_an_ambiguous_family( results ):
+    extra = make_result( "E4", "other_template", "test", errors = 5 )
+    with pytest.raises( ValueError ):
+        resolve_selection( [ *results, extra ], {} )
+    assert resolve_selection( [ *results, extra ], { "Zero-shot": "other_template" } )[ "Zero-shot" ] == "other_template"

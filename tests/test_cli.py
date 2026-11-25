@@ -2,7 +2,8 @@ import pytest
 from typer.testing import CliRunner
 
 from emotion_classifier.cli import app
-from emotion_classifier.results import load_results
+from emotion_classifier.metrics import compute_metrics
+from emotion_classifier.results import RunResult, load_results, save_result
 from emotion_classifier.transformer import FineTuneOutput
 
 runner = CliRunner()
@@ -19,10 +20,6 @@ def test_run_help_shows_its_options():
     assert result.exit_code == 0
     assert "--output-dir" in result.output
     assert "--split" in result.output
-
-def test_unimplemented_command_fails_loudly():
-    result = runner.invoke( app, [ "report" ] )
-    assert result.exit_code != 0
 
 CLASSICAL_YAML = """
 experiment: E1
@@ -155,3 +152,72 @@ def test_run_never_overwrites_existing_results( fake_data, tmp_path, monkeypatch
     second = _invoke( *args )
     assert second.exit_code != 0
     assert len( load_results( tmp_path / "results" ) ) == 2
+
+def _saved_results( results_dir ):
+    """Val + test results for every family (3 seeds of E3), written like a real run would."""
+    y_true = list( range( 6 ) ) * 5
+
+    def save( experiment, model, split, seed, errors ):
+        y_pred = [ ( label + 1 ) % 6 if index < errors else label for index, label in enumerate( y_true ) ]
+        save_result( RunResult(
+            run_id = f"{ experiment }-{ model }-{ split }-{ seed }-20261125T100000", experiment = experiment, model = model,
+            config = {}, split = split, metrics = compute_metrics( y_true, y_pred ),
+            train_seconds = None if experiment == "E4" else 5.0, infer_seconds_per_1k = 0.5, n_params = None,
+            device = "cpu", seed = seed, git_sha = None, predictions_path = None,
+        ), results_dir )
+
+    for split in ( "val", "test" ):
+        save( "E1", "tfidf_svm_12", split, 42, 4 )
+        save( "E1", "bow_nb_11", split, 42, 9 )
+        for seed in ( 1, 2, 3 ):
+            save( "E3", "distilbert", split, seed, 2 if split == "val" else 4 )
+            save( "E3", "roberta_base", split, seed, 3 if split == "val" else 2 )
+    save( "E4", "bart_mnli", "test", 42, 15 )
+
+@pytest.fixture
+def saved_results( tmp_path ):
+    _saved_results( tmp_path / "results" )
+    return tmp_path / "results"
+
+def _report( tmp_path, saved_results, *extra ):
+    return _invoke( "report", "--results-dir", saved_results, "--figures-dir", tmp_path / "figures", *extra )
+
+def test_report_writes_summary_and_figures( saved_results, tmp_path ):
+    result = _report( tmp_path, saved_results )
+
+    assert result.exit_code == 0, result.output
+    assert "distilbert" in ( saved_results / "summary.md" ).read_text()
+    assert ( saved_results / "summary.csv" ).read_text().startswith( "experiment,model,n_seeds" )
+    assert sorted( path.name for path in ( tmp_path / "figures" ).glob( "*.png" ) ) == [
+        "confusion_classical.png", "confusion_transformer.png", "confusion_zero-shot.png", "f1_vs_cost.png", "per_class_f1.png",
+    ]
+
+def test_report_never_loads_the_dataset_or_trains( saved_results, tmp_path, monkeypatch ):
+    def forbidden( *args, **kwargs ):
+        raise AssertionError( "report must only read results/" )
+    monkeypatch.setattr( "emotion_classifier.cli.load_emotion", forbidden )
+    assert _report( tmp_path, saved_results ).exit_code == 0
+
+def test_report_says_which_models_the_figures_show( saved_results, tmp_path ):
+    output = _report( tmp_path, saved_results ).output
+    assert "Transformer: distilbert" in output  # best on validation
+    assert "Classical: tfidf_svm_12" in output
+
+def test_report_select_overrides_the_model_shown( saved_results, tmp_path ):
+    output = _report( tmp_path, saved_results, "--select", "Transformer=roberta_base" ).output
+    assert "Transformer: roberta_base" in output
+
+def test_report_rejects_a_bad_selection( saved_results, tmp_path ):
+    for bad in ( "Transformer=nope", "Linear=tfidf_svm_12", "no-equals-sign" ):
+        result = _report( tmp_path, saved_results, "--select", bad )
+        assert result.exit_code != 0
+        assert not ( tmp_path / "figures" ).exists()
+
+def test_report_can_be_rerun_and_overwrites_its_outputs( saved_results, tmp_path ):
+    assert _report( tmp_path, saved_results ).exit_code == 0
+    assert _report( tmp_path, saved_results ).exit_code == 0
+
+def test_report_without_results_fails_with_a_clear_message( tmp_path ):
+    result = _invoke( "report", "--results-dir", tmp_path / "empty", "--figures-dir", tmp_path / "figures" )
+    assert result.exit_code != 0
+    assert "No test results" in result.output

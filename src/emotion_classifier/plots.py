@@ -37,24 +37,46 @@ def _require_test_results( results: list[ RunResult ] ) -> None:
     if not latest_runs( results, "test" ):
         raise ValueError( "no test results to plot" )
 
-def select_models( results: list[ RunResult ] ) -> dict[ str, str ]:
-    """The model shown per family: best mean validation macro-F1 (never test, TRD §4). Zero-shot has no
-    validation run, so it is taken as-is when it is the only model; with several, say which to plot."""
+def _select_family( results: list[ RunResult ], family: str ) -> str | None:
+    """Best model of one family by mean validation macro-F1 (never test, TRD §4); None if the family has no test results.
+    Zero-shot has no validation run, so its model is taken as-is when it is the only one."""
+    candidates = sorted( { r.model for r in latest_runs( results, "test" ) if r.experiment in FAMILIES[ family ] } )
     validation: dict[ str, list[ float ] ] = {}
     for result in latest_runs( results, "val" ):
         validation.setdefault( result.model, [] ).append( result.metrics[ "macro_f1" ] )
 
-    selected = {}
-    for family, experiments in FAMILIES.items():
-        candidates = sorted( { r.model for r in latest_runs( results, "test" ) if r.experiment in experiments } )
-        scores = { model: sum( validation[ model ] ) / len( validation[ model ] ) for model in candidates if model in validation }
-        if scores:
-            selected[ family ] = max( sorted( scores ), key = scores.get )
-        elif len( candidates ) == 1:
-            selected[ family ] = candidates[ 0 ]
-        elif candidates:
-            raise ValueError( f"{ family }: { candidates } have no validation results, so pass `selected` to choose one" )
-    return selected
+    scores = { model: sum( validation[ model ] ) / len( validation[ model ] ) for model in candidates if model in validation }
+    if scores:
+        return max( sorted( scores ), key = scores.get )
+    if len( candidates ) > 1:
+        raise ValueError( f"{ family }: { candidates } have no validation results, so choose one explicitly" )
+    return candidates[ 0 ] if candidates else None
+
+def select_models( results: list[ RunResult ] ) -> dict[ str, str ]:
+    """The model shown per family, chosen on validation macro-F1: { family: model } for families that have test results."""
+    chosen = { family: _select_family( results, family ) for family in FAMILIES }
+    return { family: model for family, model in chosen.items() if model is not None }
+
+def resolve_selection( results: list[ RunResult ], overrides: dict[ str, str ] ) -> dict[ str, str ]:
+    """select_models, with `overrides` ( { family: model }, family names case-insensitive ) taking precedence.
+    An override must name a model of that family that has test results."""
+    by_lower = { family.lower(): family for family in FAMILIES }
+    chosen: dict[ str, str ] = {}
+    for name, model in overrides.items():
+        family = by_lower.get( name.lower() )
+        if family is None:
+            raise ValueError( f"Unknown family { repr( name ) }; expected one of { list( FAMILIES ) }" )
+        available = sorted( { r.model for r in latest_runs( results, "test" ) if r.experiment in FAMILIES[ family ] } )
+        if model not in available:
+            raise ValueError( f"{ family }: no test results for { repr( model ) }; available: { available }" )
+        chosen[ family ] = model
+
+    for family in FAMILIES:
+        if family not in chosen:
+            model = _select_family( results, family )
+            if model is not None:
+                chosen[ family ] = model
+    return { family: chosen[ family ] for family in FAMILIES if family in chosen }
 
 def pooled_confusion( results: list[ RunResult ], model: str ) -> list[ list[ int ] ]:
     """Test-split confusion matrix of `model`, summed over its seeds."""
