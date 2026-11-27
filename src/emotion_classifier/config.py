@@ -173,15 +173,19 @@ def _check_choice( cls: type, kwargs: dict, where: str ) -> None:
         if kwargs[ name ] not in allowed:
             raise ConfigError( f"{ where }: '{ name }' must be one of { list( allowed ) }, got { repr( kwargs[ name ] ) }" )
 
+def config_from_dict( data: Any, where: str = "config" ) -> Config:
+    """Validated config from a mapping (a parsed YAML file, or the `config` saved in a RunResult)."""
+    if not isinstance( data, dict ):
+        raise ConfigError( f"{ where }: expected a mapping at the top level" )
+    family = data.get( "family" )
+    if family not in FAMILIES:
+        raise ConfigError( f"{ where }: 'family' must be one of { list( FAMILIES ) }, got { repr( family ) }" )
+
+    return _build( FAMILIES[ family ], data, where )
+
 def load_config( path: Path ) -> Config:
     path = Path( path )
     with path.open( encoding = "utf-8" ) as handle:
         data = yaml.safe_load( handle )
 
-    if not isinstance( data, dict ):
-        raise ConfigError( f"{ path }: expected a mapping at the top level" )
-    family = data.get( "family" )
-    if family not in FAMILIES:
-        raise ConfigError( f"{ path }: 'family' must be one of { list( FAMILIES ) }, got { repr( family ) }" )
-
-    return _build( FAMILIES[ family ], data, str( path ) )
+    return config_from_dict( data, str( path ) )

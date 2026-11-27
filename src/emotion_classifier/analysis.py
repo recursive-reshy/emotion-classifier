@@ -5,7 +5,33 @@ from pathlib import Path
 import numpy as np
 from sklearn.pipeline import Pipeline
 
-from emotion_classifier.data import LABELS
+from emotion_classifier.classical import build_model
+from emotion_classifier.config import ClassicalConfig, config_from_dict
+from emotion_classifier.data import LABELS, DatasetSplits
+from emotion_classifier.report import latest_runs
+from emotion_classifier.results import RunResult
+
+LINEAR_KINDS = ( "logreg", "svm" )
+
+def _is_linear_classical( run: RunResult ) -> bool:
+    return run.config.get( "family" ) == "classical" and run.config.get( "classifier", {} ).get( "kind" ) in LINEAR_KINDS
+
+def best_linear_run( results: list[ RunResult ] ) -> RunResult:
+    """The linear classical model (logreg or svm) with the best validation macro-F1: its validation run.
+    Selected on validation only; test results are ignored."""
+    candidates = [ run for run in latest_runs( results, "val" ) if _is_linear_classical( run ) ]
+    if not candidates:
+        raise ValueError( "No validation results for a linear classical model (logreg or svm)" )
+    return max( sorted( candidates, key = lambda run: run.run_id ), key = lambda run: run.metrics[ "macro_f1" ] )
+
+def refit_linear( run: RunResult, splits: DatasetSplits ) -> Pipeline:
+    """Rebuild the pipeline a classical run used (with the C it tuned on validation) and fit it on the train split.
+    Training is deterministic, so this is the model behind the run's predictions."""
+    if not _is_linear_classical( run ):
+        raise ValueError( f"{ run.model } is not a linear classical model (logreg or svm)" )
+    cfg = config_from_dict( { key: value for key, value in run.config.items() if key != "tuned" }, run.run_id )
+    assert isinstance( cfg, ClassicalConfig )
+    return build_model( cfg, run.config[ "tuned" ][ "value" ] ).fit( splits.train_texts, splits.train_labels )
 
 def top_features( pipeline: Pipeline, k: int = 15 ) -> dict[ str, list[ tuple[ str, float ] ] ]:
     """Per class, the k n-grams with the largest coefficients, best first: { label: [ ( ngram, weight ) ] }.

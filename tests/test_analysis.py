@@ -1,13 +1,15 @@
+from dataclasses import replace
+
 import pytest
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
-from emotion_classifier.analysis import confusion_pairs, sample_errors, top_features
+from emotion_classifier.analysis import best_linear_run, confusion_pairs, refit_linear, sample_errors, top_features
 from emotion_classifier.data import LABELS
 from emotion_classifier.features import build_vectorizer
-from emotion_classifier.results import save_predictions
+from emotion_classifier.results import RunResult, save_predictions
 
 def fitted( classifier, tiny_splits, ngram_range = ( 1, 1 ) ) -> Pipeline:
     pipeline = Pipeline( [
@@ -100,3 +102,50 @@ def test_confusion_pairs_ignores_the_diagonal_and_zero_cells():
 def test_confusion_pairs_break_ties_deterministically():
     confusion = [ [ 0, 2, 2 ], [ 2, 0, 0 ], [ 0, 0, 0 ] ]
     assert confusion_pairs( confusion, k = 3 ) == [ ( 0, 1, 2 ), ( 0, 2, 2 ), ( 1, 0, 2 ) ]
+
+# ---- best linear model, refit for its top n-grams ---------------------------------------------------
+
+def classical_run( model, kind, split = "val", macro_f1 = 0.8, experiment = "E1", tuned = 1.0 ) -> RunResult:
+    config = {
+        "experiment": experiment, "family": "classical",
+        "vectorizer": { "kind": "tfidf", "ngram_range": [ 1, 1 ], "min_df": 1, "max_features": None, "stop_words": None },
+        "classifier": { "kind": kind, "class_weight": None },
+        "tuning": { "param": "alpha" if kind == "nb" else "C", "values": [ 0.1, 1 ] },
+        "seed": 42,
+        "tuned": { "param": "alpha" if kind == "nb" else "C", "value": tuned, "val_scores": {} },
+    }
+    return RunResult(
+        run_id = f"{ experiment }-{ model }-{ split }-42-20261124T090000", experiment = experiment, model = model,
+        config = config, split = split, metrics = { "macro_f1": macro_f1 },
+        train_seconds = 1.0, infer_seconds_per_1k = 1.0, n_params = None,
+        device = "cpu", seed = 42, git_sha = None, predictions_path = None,
+    )
+
+def transformer_run( macro_f1 ) -> RunResult:
+    run = classical_run( "distilbert", "svm", macro_f1 = macro_f1 )
+    return replace( run, experiment = "E3", config = { "experiment": "E3", "family": "transformer" } )
+
+def test_best_linear_run_is_the_best_on_validation_among_linear_classical_models():
+    runs = [
+        classical_run( "tfidf_nb_11", "nb", macro_f1 = 0.95 ),                       # best overall, but not linear
+        classical_run( "bow_svm_11", "svm", macro_f1 = 0.85 ),
+        classical_run( "tfidf_logreg_11", "logreg", macro_f1 = 0.80 ),
+        classical_run( "tfidf_svm_11", "svm", split = "test", macro_f1 = 0.99 ),     # test never selects
+        transformer_run( macro_f1 = 0.99 ),
+    ]
+    assert best_linear_run( runs ).model == "bow_svm_11"
+
+def test_best_linear_run_needs_a_linear_validation_run():
+    with pytest.raises( ValueError, match = "linear" ):
+        best_linear_run( [ classical_run( "tfidf_nb_11", "nb" ), classical_run( "tfidf_svm_11", "svm", split = "test" ) ] )
+
+@pytest.mark.parametrize( "kind", [ "logreg", "svm" ] )
+def test_refit_linear_rebuilds_the_tuned_pipeline_and_fits_on_train( kind, tiny_splits ):
+    pipeline = refit_linear( classical_run( "m", kind, tuned = 3.0 ), tiny_splits )
+
+    assert pipeline.named_steps[ "classifier" ].C == 3.0
+    assert hasattr( pipeline.named_steps[ "classifier" ], "coef_" )
+
+def test_refit_linear_rejects_a_model_without_coefficients( tiny_splits ):
+    with pytest.raises( ValueError, match = "linear" ):
+        refit_linear( classical_run( "tfidf_nb_11", "nb" ), tiny_splits )
