@@ -1,0 +1,118 @@
+{
+  "run_id": "E5-qwen3_4b_instruct-test-42-20261125T143708",
+  "experiment": "E5",
+  "model": "qwen3_4b_instruct",
+  "config": {
+    "experiment": "E5",
+    "family": "llm",
+    "model_name": "Qwen/Qwen3-4B-Instruct-2507",
+    "batch_size": 16,
+    "max_new_tokens": 8,
+    "seed": 42,
+    "prompt_example": "Classify the emotion expressed in the tweet below. Choose exactly one of these labels: sadness, joy, love, anger, fear, surprise. Answer with only the label, in lowercase, and nothing else.\n\nTweet: <tweet>\nLabel:",
+    "decoding": "greedy (temperature 0)"
+  },
+  "split": "test",
+  "metrics": {
+    "accuracy": 0.55,
+    "macro_f1": 0.4541350339813596,
+    "weighted_f1": 0.5596359143513898,
+    "per_class": {
+      "sadness": {
+        "precision": 0.60801393728223,
+        "recall": 0.6006884681583476,
+        "f1": 0.6043290043290044,
+        "support": 581
+      },
+      "joy": {
+        "precision": 0.7174959871589085,
+        "recall": 0.6431654676258993,
+        "f1": 0.6783004552352049,
+        "support": 695
+      },
+      "love": {
+        "precision": 0.390625,
+        "recall": 0.15723270440251572,
+        "f1": 0.2242152466367713,
+        "support": 159
+      },
+      "anger": {
+        "precision": 0.4962962962962963,
+        "recall": 0.48727272727272725,
+        "f1": 0.4917431192660551,
+        "support": 275
+      },
+      "fear": {
+        "precision": 0.5,
+        "recall": 0.48660714285714285,
+        "f1": 0.49321266968325794,
+        "support": 224
+      },
+      "surprise": {
+        "precision": 0.14814814814814814,
+        "recall": 0.5454545454545454,
+        "f1": 0.23300970873786409,
+        "support": 66
+      }
+    },
+    "confusion": [
+      [
+        349,
+        62,
+        8,
+        68,
+        53,
+        41
+      ],
+      [
+        75,
+        447,
+        27,
+        43,
+        18,
+        82
+      ],
+      [
+        36,
+        64,
+        25,
+        6,
+        3,
+        25
+      ],
+      [
+        59,
+        20,
+        2,
+        134,
+        28,
+        29
+      ],
+      [
+        49,
+        16,
+        1,
+        17,
+        109,
+        30
+      ],
+      [
+        6,
+        14,
+        1,
+        2,
+        7,
+        36
+      ]
+    ],
+    "n_invalid": 8,
+    "invalid_rate": 0.004
+  },
+  "train_seconds": null,
+  "infer_seconds_per_1k": 53.94308883349004,
+  "n_params": 4022468096,
+  "device": "mps",
+  "seed": 42,
+  "git_sha": "39cc8674179f142f4c56857ca5006c9cedb292ca",
+  "predictions_path": "preds/E5-qwen3_4b_instruct-test-42-20261125T143708.csv"
+}
